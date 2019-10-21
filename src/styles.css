@@ -1,0 +1,7 @@
+.badInput {
+    border-width: .2em;
+    border-color: red;
+}
+.displayNone {
+    display: none;
+}
