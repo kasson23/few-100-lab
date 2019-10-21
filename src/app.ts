@@ -1,4 +1,4 @@
-import { formatter } from './utils';
+import { formatter, storeSelectedTip, getSelectedTip } from './utils';
 
 const amountLabel = document.getElementById('amountLabel') as HTMLInputElement;
 const btns = document.querySelectorAll('.btn') as NodeListOf<HTMLButtonElement>;
@@ -10,14 +10,14 @@ const amtToBePaidLabel = document.getElementById('amtToBePaidLabel') as HTMLInpu
 const badInputLabel = document.getElementById('badInputLabel') as HTMLDivElement;
 
 let inputValue = 0;
-let tipPercent = 0;
+const tipPercent = 0;
 
 window.onload = () => {
     // Code if need to get local storage for last tip amount
     document.querySelectorAll('.btn').item(2).setAttribute('disabled', null);
     calcPaymentsAndDisplay(inputValue);
-    tipPercent = .20;
-    showTipAmtInLabels(tipPercent);
+    storeSelectedTip(.20);
+    showTipAmtInLabels(getSelectedTip());
 };
 
 
@@ -28,7 +28,8 @@ export function runApp() {
 
     amountLabel.addEventListener('input', () => {
         inputValue = amountLabel.valueAsNumber;
-        if (inputValue < 0) {
+        if (inputValue < 0 || !inputValue) {
+            // Could refactor these add and remove
             amountLabel.classList.add('badInput');
             badInputLabel.classList.remove('displayNone');
         } else {
@@ -39,9 +40,10 @@ export function runApp() {
     });
 }
 
-function changeTipButton(btn: HTMLButtonElement, index: number) {
-    btn.addEventListener('click', () => {
-        tipPercent = parseFloat(btn.innerText) / 100;
+function changeTipButton(currentBtn: HTMLButtonElement, index: number) {
+    currentBtn.addEventListener('click', () => {
+
+        storeSelectedTip(parseFloat(currentBtn.innerText) / 100);
         btns.forEach((n, i) => {
             if (i === index) {
                 n.setAttribute('disabled', null);
@@ -49,8 +51,17 @@ function changeTipButton(btn: HTMLButtonElement, index: number) {
                 n.removeAttribute('disabled');
             }
         });
-        showTipAmtInLabels(tipPercent);
-        calcPaymentsAndDisplay(inputValue);
+        showTipAmtInLabels(getSelectedTip());
+
+        if (inputValue < 0 || !inputValue) {
+            // Could refactor these add and remove
+            amountLabel.classList.add('badInput');
+            badInputLabel.classList.remove('displayNone');
+        } else {
+            calcPaymentsAndDisplay(inputValue);
+            amountLabel.classList.remove('badInput');
+            badInputLabel.classList.add('displayNone');
+        }
     });
 }
 
@@ -62,13 +73,7 @@ function showTipAmtInLabels(tip: number) {
 
 function calcPaymentsAndDisplay(amt: number) {
     billAmtLabel.value = `Bill amount: ${formatter.format(inputValue)}`;
-    const tipAmount = (inputValue * tipPercent);
+    const tipAmount = (inputValue * getSelectedTip());
     tipAmtLabel.value = `Tip Amount: ${formatter.format(tipAmount)}`;
     amtToBePaidLabel.value = `Amount to be Paid: ${formatter.format((inputValue + tipAmount))}`;
 }
-
-function handleTyping() {
-    const value = amountLabel.valueAsNumber;
-    console.log(value);
-}
-
